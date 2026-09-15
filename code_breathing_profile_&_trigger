@@ -1,0 +1,52 @@
+#include <Servo.h>
+
+Servo myServo;  // Create a servo object
+
+// Adjustable delay values
+const int minDelay = 30;   // Minimum delay (faster speed)
+const int maxDelay = 80;   // Maximum delay (slower speed)
+const int cameraPin = 8;   // Digital pin connected to camera trigger
+
+void setup() {
+  pinMode(cameraPin, OUTPUT);
+  digitalWrite(cameraPin, LOW);  // Keep camera line stable at 0V during boot
+  
+  // ======================================================================
+  // THE FIX: Define the starting position BEFORE activating the servo pin
+  // ======================================================================
+  myServo.write(0);   // Tell the library your starting angle is 0 degrees
+  myServo.attach(7);  // Now activate the pin. The servo wakes up cleanly at 0° without jerking.
+
+  // ==========================================
+  // 1. TRIGGER THE CAMERA 
+  // ==========================================
+  digitalWrite(cameraPin, HIGH); // Send trigger pulse to camera
+
+  // ==========================================
+  // 2. SERVO MOVES WHILE CAMERA IS TRIGGERED
+  // ==========================================
+  // Sweep from 0 to 60 degrees, starting fast and slowing down
+  for (int pos =23; pos <= 90; pos += 1) {
+    int dynamicDelay = map(pos, 23, 90, minDelay, maxDelay);
+    myServo.write(pos);
+    delay(dynamicDelay);
+  }
+
+  // ==========================================
+  // 3. END PULSE AFTER THE FIRST SWEEP IS DONE
+  // ==========================================
+  digitalWrite(cameraPin, LOW);  // Turn off camera trigger
+
+  delay(1500);  // Pause for 1.5 seconds at the 60 degree mark
+
+  // Sweep back from 60 to 0 degrees
+  for (int pos = 90; pos >= 23; pos -= 1) {
+    int dynamicDelay = map(pos, 23, 90, maxDelay, minDelay);
+    myServo.write(pos);
+    delay(dynamicDelay);
+  }
+}
+
+void loop() {
+  // Empty loop so the sequence only runs ONCE.
+}
